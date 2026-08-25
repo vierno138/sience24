@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>광합성에 영향을 미치는 환경 요인 탐구 시뮬레이터</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            organic: {
+              cream: '#FAF7F2',
+              card: '#FFFFFF',
+              sand: '#F3ECE1',
+              sage: '#E8EFE6',
+              mint: '#D8ECE0',
+              forest: '#2D5A27',
+              moss: '#4A7C59',
+              lightgreen: '#87A96B',
+              earth: '#5C4033',
+              accent: '#E07A5F',
+              yellow: '#F4A261',
+              muted: '#6B7280'
+            }
+          },
+          fontFamily: {
+            sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #FAF7F2; }
+    ::-webkit-scrollbar-thumb { background: #B2C9B5; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #87A96B; }
+
+    .organic-shadow {
+      box-shadow: 0 10px 30px -5px rgba(45, 90, 39, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+    }
+    .organic-border {
+      border: 2px solid #E2EADF;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+      .print-area { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-organic-cream text-gray-800 font-sans min-h-screen flex flex-col antialiased selection:bg-organic-mint selection:text-organic-forest">
+
+  <!-- Navigation Header -->
+  <header class="bg-white border-b border-organic-sand sticky top-0 z-30 organic-shadow no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-organic-sage flex items-center justify-center text-organic-forest font-bold text-xl shadow-inner">
+            <i class="fa-solid fa-leaf"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-organic-forest leading-tight">광합성 환경 요인 탐구</h1>
+            <p class="text-xs text-organic-muted">중학교 2학년 과학 · 식물과 에너지</p>
+          </div>
+        </div>
+
+        <button onclick="showHelpModal()" class="md:hidden text-organic-forest hover:bg-organic-sage p-2 rounded-xl transition">
+          <i class="fa-solid fa-circle-question text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Step Indicator Nav Bar -->
+      <nav class="flex items-center justify-between md:justify-end gap-1 sm:gap-2 text-xs font-semibold overflow-x-auto py-1">
+        <button id="nav-step1" onclick="switchTab('step1')" class="px-3 py-2 rounded-2xl flex items-center gap-1.5 transition bg-organic-forest text-white shadow-sm whitespace-nowrap">
+          <span class="w-5 h-5 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px]">1</span>
+          <span>문제 인식</span>
+        </button>
+
+        <i class="fa-solid fa-angle-right text-gray-300 text-[10px]"></i>
+
+        <button id="nav-step2" onclick="switchTab('step2')" class="px-3 py-2 rounded-2xl flex items-center gap-1.5 transition text-organic-muted hover:text-organic-forest hover:bg-organic-sage/50 whitespace-nowrap">
+          <span class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px]">2</span>
+          <span>가설 설정</span>
+        </button>
+
+        <i class="fa-solid fa-angle-right text-gray-300 text-[10px]"></i>
+
+        <button id="nav-step3" onclick="switchTab('step3')" class="px-3 py-2 rounded-2xl flex items-center gap-1.5 transition text-organic-muted hover:text-organic-forest hover:bg-organic-sage/50 whitespace-nowrap">
+          <span class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px]">3</span>
+          <span>탐구 실험</span>
+        </button>
+
+        <i class="fa-solid fa-angle-right text-gray-300 text-[10px]"></i>
+
+        <button id="nav-step4" onclick="switchTab('step4')" class="px-3 py-2 rounded-2xl flex items-center gap-1.5 transition text-organic-muted hover:text-organic-forest hover:bg-organic-sage/50 whitespace-nowrap">
+          <span class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px]">4</span>
+          <span>실험 결과 해석</span>
+        </button>
+
+        <i class="fa-solid fa-angle-right text-gray-300 text-[10px]"></i>
+
+        <button id="nav-step5" onclick="switchTab('step5')" class="px-3 py-2 rounded-2xl flex items-center gap-1.5 transition text-organic-muted hover:text-organic-forest hover:bg-organic-sage/50 whitespace-nowrap">
+          <span class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px]">5</span>
+          <span>결론 및 보고서</span>
+        </button>
+
+        <button onclick="showHelpModal()" class="hidden md:flex items-center gap-1 text-organic-forest bg-organic-sage hover:bg-organic-mint px-3 py-2 rounded-2xl transition ml-2">
+          <i class="fa-solid fa-circle-question"></i>
+          <span>도움말</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col">
+    
+    <!-- Toast Message Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- STEP 1: 문제 인식 -->
+    <section id="panel-step1" class="space-y-6 animate-fadeIn">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 organic-border organic-shadow space-y-6">
+        <div class="flex items-center gap-3 border-b border-organic-sand pb-4">
+          <span class="px-3 py-1 bg-organic-sage text-organic-forest text-xs font-bold rounded-full">STEP 1</span>
+          <h2 class="text-xl sm:text-2xl font-bold text-organic-forest">탐구할 환경 요인 선택하기 (문제 인식)</h2>
+        </div>
+
+        <div class="bg-organic-cream p-5 rounded-2xl border border-organic-sand space-y-2">
+          <p class="text-sm sm:text-base leading-relaxed text-gray-700">
+            <i class="fa-solid fa-quote-left text-organic-moss mr-1 opacity-50"></i>
+            식물이 광합성을 통해 양분과 산소를 만들 때, 주변의 환경에 따라 광합성량이 달라집니다. 
+            <strong>빛의 세기, 이산화 탄소 농도, 온도</strong> 등 3가지 주요 환경 요인 중 한 가지를 선택하여 탐구 실험을 수행해보세요.
+            <i class="fa-solid fa-quote-right text-organic-moss ml-1 opacity-50"></i>
+          </p>
+        </div>
+
+        <!-- Factor Selection Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          
+          <!-- Card 1: Light Intensity -->
+          <div id="card-factor-light" onclick="selectFactor('light')" 
+               class="cursor-pointer group relative p-6 rounded-3xl border-2 transition-all duration-300 bg-white border-organic-forest shadow-md flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                <i class="fa-solid fa-sun"></i>
+              </div>
+              <span id="badge-factor-light" class="px-2.5 py-1 bg-organic-forest text-white text-xs font-bold rounded-full">선택됨</span>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-800 group-hover:text-organic-forest">1. 빛의 세기</h3>
+              <p class="text-xs text-gray-500 mt-1">LED 전등의 밝기 변화에 따른 광합성량 차이를 측정합니다.</p>
+            </div>
+            <div class="text-xs text-organic-moss font-semibold flex items-center gap-1">
+              <span>빛의 세기 조건 탐구하기</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </div>
+          </div>
+
+          <!-- Card 2: CO2 Concentration -->
+          <div id="card-factor-co2" onclick="selectFactor('co2')" 
+               class="cursor-pointer group relative p-6 rounded-3xl border-2 transition-all duration-300 bg-white border-organic-sand hover:border-organic-forest hover:shadow-lg flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                <i class="fa-solid fa-flask"></i>
+              </div>
+              <span id="badge-factor-co2" class="hidden px-2.5 py-1 bg-organic-forest text-white text-xs font-bold rounded-full">선택됨</span>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-800 group-hover:text-organic-forest">2. 이산화 탄소 농도</h3>
+              <p class="text-xs text-gray-500 mt-1">탄산수소 나트륨 수용액 농도(1%~5%) 변화에 따른 영향을 관찰합니다.</p>
+            </div>
+            <div class="text-xs text-organic-moss font-semibold flex items-center gap-1">
+              <span>CO₂ 농도 조건 탐구하기</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </div>
+          </div>
+
+          <!-- Card 3: Temperature -->
+          <div id="card-factor-temp" onclick="selectFactor('temp')" 
+               class="cursor-pointer group relative p-6 rounded-3xl border-2 transition-all duration-300 bg-white border-organic-sand hover:border-organic-forest hover:shadow-lg flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                <i class="fa-solid fa-temperature-half"></i>
+              </div>
+              <span id="badge-factor-temp" class="hidden px-2.5 py-1 bg-organic-forest text-white text-xs font-bold rounded-full">선택됨</span>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-800 group-hover:text-organic-forest">3. 수용액 온도</h3>
+              <p class="text-xs text-gray-500 mt-1">10℃부터 50℃까지 온도가 광합성 속도에 미치는 특성을 확인합니다.</p>
+            </div>
+            <div class="text-xs text-organic-moss font-semibold flex items-center gap-1">
+              <span>온도 조건 탐구하기</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flex justify-end pt-4">
+          <button onclick="nextStep('step2')" class="px-6 py-3 rounded-2xl bg-organic-forest text-white font-bold hover:bg-organic-moss transition flex items-center gap-2 shadow-md">
+            <span>가설 설정으로 이동</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: 가설 설정 -->
+    <section id="panel-step2" class="hidden space-y-6 animate-fadeIn">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 organic-border organic-shadow space-y-6">
+        <div class="flex items-center gap-3 border-b border-organic-sand pb-4">
+          <span class="px-3 py-1 bg-organic-sage text-organic-forest text-xs font-bold rounded-full">STEP 2</span>
+          <h2 class="text-xl sm:text-2xl font-bold text-organic-forest">가설 설정하기</h2>
+        </div>
+
+        <!-- Good Hypothesis Guide Box -->
+        <div class="bg-organic-sage/50 p-5 rounded-2xl border border-organic-mint space-y-3">
+          <h3 class="font-bold text-organic-forest text-sm flex items-center gap-2">
+            <i class="fa-solid fa-lightbulb text-amber-500"></i>
+            <span>좋은 가설이란?</span>
+          </h3>
+          <ul class="text-xs sm:text-sm text-gray-700 space-y-1.5 pl-5 list-disc">
+            <li><strong>독립변인(원인)</strong>과 <strong>종속변인(결과)</strong>의 관계가 명확하게 드러나야 합니다.</li>
+            <li>예상되는 결과를 <strong>'~할수록 ~일 것이다'</strong>와 같은 잠정적인 답의 형태로 작성합니다.</li>
+            <li>실제 탐구 실험을 통해 객관적으로 검증할 수 있어야 합니다.</li>
+          </ul>
+          <div class="text-xs text-organic-moss bg-white p-2.5 rounded-xl border border-organic-mint">
+            💡 <strong>예시:</strong> "빛의 세기가 세질수록 시금치 잎 원반 6개가 모두 떠오르는 데 걸리는 시간이 짧아질 것이다."
+          </div>
+        </div>
+
+        <!-- Selected Factor Summary -->
+        <div class="p-4 rounded-2xl bg-organic-cream border border-organic-sand flex items-center justify-between">
+          <div>
+            <span class="text-xs text-gray-500 block">내가 선택한 탐구 요인</span>
+            <span id="selected-factor-title" class="font-bold text-organic-forest text-lg">빛의 세기</span>
+          </div>
+          <button onclick="switchTab('step1')" class="text-xs text-organic-moss underline hover:text-organic-forest">
+            요인 변경하기
+          </button>
+        </div>
+
+        <!-- Hypothesis Input -->
+        <div class="space-y-2">
+          <label for="hypothesis-input" class="block font-bold text-sm text-gray-800">
+            세운 가설을 입력하세요:
+          </label>
+          <textarea id="hypothesis-input" rows="3" 
+                    placeholder="예: 빛의 세기가 세질수록 시금치 잎 원반 6개가 모두 떠오르는 데 걸리는 시간이 짧아질 것이다."
+                    class="w-full p-4 rounded-2xl border-2 border-organic-sand focus:border-organic-forest focus:outline-none text-sm transition"></textarea>
+        </div>
+
+        <div class="flex justify-between pt-4">
+          <button onclick="switchTab('step1')" class="px-5 py-2.5 rounded-2xl bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 transition">
+            이전 단계
+          </button>
+          <button onclick="saveHypothesisAndNext()" class="px-6 py-3 rounded-2xl bg-organic-forest text-white font-bold hover:bg-organic-moss transition flex items-center gap-2 shadow-md">
+            <span>탐구 실험 계획 및 수행</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3: 탐구 실험 -->
+    <section id="panel-step3" class="hidden space-y-6 animate-fadeIn">
+      
+      <!-- Variable Identification Mission Card -->
+      <div class="bg-white rounded-3xl p-6 organic-border organic-shadow space-y-4">
+        <div class="flex items-center justify-between border-b border-organic-sand pb-3">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">필수 미션</span>
+            <h3 class="font-bold text-gray-800 text-base">실험 변인 구분하기</h3>
+          </div>
+          <span id="var-status-badge" class="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+            변인 설정 미완료
+          </span>
+        </div>
+
+        <p class="text-xs text-gray-600">
+          올바른 실험을 위해 아래 변인 카드들을 <strong>[조작 변인]</strong>과 <strong>[통제 변인]</strong> 위치로 알맞게 지정하세요.
+        </p>
+
+        <!-- Variable Choice Buttons -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          
+          <div class="p-4 rounded-2xl border border-organic-sand bg-organic-cream space-y-2">
+            <span class="text-xs font-bold text-organic-forest">빛의 세기</span>
+            <div class="flex gap-2">
+              <button onclick="setVariableRole('light', 'manipulated')" id="btn-var-light-m" class="flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition">조작변인</button>
+              <button onclick="setVariableRole('light', 'controlled')" id="btn-var-light-c" class="flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition">통제변인</button>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl border border-organic-sand bg-organic-cream space-y-2">
+            <span class="text-xs font-bold text-organic-forest">이산화 탄소 농도</span>
+            <div class="flex gap-2">
+              <button onclick="setVariableRole('co2', 'manipulated')" id="btn-var-co2-m" class="flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition">조작변인</button>
+              <button onclick="setVariableRole('co2', 'controlled')" id="btn-var-co2-c" class="flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition">통제변인</button>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl border border-organic-sand bg-organic-cream space-y-2">
+            <span class="text-xs font-bold text-organic-forest">수용액 온도</span>
+            <div class="flex gap-2">
+              <button onclick="setVariableRole('temp', 'manipulated')" id="btn-var-temp-m" class="flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition">조작변인</button>
+              <button onclick="setVariableRole('temp', 'controlled')" id="btn-var-temp-c" class="flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition">통제변인</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="p-3 bg-organic-sage/40 rounded-2xl border border-organic-mint text-xs text-gray-700 flex items-center justify-between">
+          <div>
+            <strong>종속변인 (고정):</strong> 시금치 잎 원반 6개가 모두 떠오르는 데 걸리는 시간(s)
+          </div>
+          <button onclick="checkVariableSetup()" class="px-4 py-1.5 bg-organic-forest text-white font-bold rounded-xl hover:bg-organic-moss transition text-xs">
+            변인 설정 확인
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Simulation Workbench Area (Initially Hidden) -->
+      <div id="sim-workbench" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
+        
+        <!-- Left Controller Panel -->
+        <div class="lg:col-span-5 bg-white rounded-3xl p-6 organic-border organic-shadow space-y-5">
+          <h3 class="font-bold text-organic-forest text-lg flex items-center gap-2 border-b border-organic-sand pb-3">
+            <i class="fa-solid fa-sliders text-organic-moss"></i>
+            <span>실험 조건 조작 패널</span>
+          </h3>
+
+          <!-- Manipulated Variable Control Block -->
+          <div id="sim-control-box" class="space-y-4 transition-all">
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <label id="slider-label" class="font-bold text-sm text-gray-800">조작 변인 설정</label>
+                <span id="slider-value-display" class="px-3 py-1 bg-organic-sage text-organic-forest font-bold text-sm rounded-full">
+                  3단
+                </span>
+              </div>
+              <input type="range" id="sim-slider" min="1" max="5" value="3" oninput="onSliderChange(this.value)"
+                     class="w-full accent-organic-forest h-2 bg-gray-200 rounded-lg cursor-pointer">
+              <div id="slider-ticks" class="flex justify-between text-[11px] text-gray-400 px-1 font-semibold">
+                <span>1단</span><span>2단</span><span>3단</span><span>4단</span><span>5단</span>
+              </div>
+            </div>
+
+            <!-- Controlled Variables Fixed Settings Display -->
+            <div class="p-4 rounded-2xl bg-organic-cream border border-organic-sand space-y-2 text-xs">
+              <span class="font-bold text-gray-700 block">통제 변인 (일정하게 유지하는 조건)</span>
+              <div id="ctrl-vars-container" class="space-y-1 text-gray-600">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+
+            <!-- Execution Buttons -->
+            <div class="space-y-2 pt-2">
+              <button id="btn-start-sim" onclick="toggleSimulation()"
+                      class="w-full py-3.5 rounded-2xl bg-organic-forest text-white font-bold hover:bg-organic-moss disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md">
+                <i id="sim-play-icon" class="fa-solid fa-play"></i>
+                <span id="sim-btn-text">실험 시작</span>
+              </button>
+
+              <button id="btn-record-data" onclick="recordDataPoint()" disabled
+                      class="w-full py-2.5 rounded-2xl border-2 border-organic-forest text-organic-forest font-bold hover:bg-organic-sage disabled:border-gray-200 disabled:text-gray-400 disabled:bg-transparent transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>측정 결과 표에 기록하기</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Timer & Leaf Status Card -->
+          <div class="grid grid-cols-2 gap-3 pt-2">
+            <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-center">
+              <span class="text-[11px] font-bold text-amber-800 block">소요 시간(s)</span>
+              <span id="timer-display" class="text-2xl font-black text-amber-900 font-mono">00.0s</span>
+            </div>
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
+              <span class="text-[11px] font-bold text-emerald-800 block">떠오른 잎 원반</span>
+              <span id="leaf-count-display" class="text-2xl font-black text-emerald-900 font-mono">0 / 6</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Simulation Canvas Area -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="bg-white rounded-3xl p-4 organic-border organic-shadow relative overflow-hidden flex flex-col items-center justify-center min-h-[460px]">
+            
+            <!-- Simulation Finish Banner -->
+            <div id="sim-complete-banner" class="hidden absolute inset-x-4 top-16 z-20 bg-emerald-600/95 text-white p-4 rounded-2xl text-center shadow-xl animate-bounce">
+              <p class="font-bold text-sm">🎉 모든 잎 원반 6개가 수면 위로 떠올랐습니다!</p>
+              <p class="text-xs opacity-90">최종 기록 시간: <span id="banner-final-time" class="font-mono font-bold underline">00.0s</span> → 하단의 [측정 결과 표에 기록하기] 버튼을 누르세요.</p>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="w-full h-[440px] relative">
+              <canvas id="simCanvas" class="w-full h-full block rounded-2xl"></canvas>
+            </div>
+          </div>
+
+          <!-- Results Data Table -->
+          <div class="bg-white rounded-3xl p-5 organic-border organic-shadow space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-table text-organic-forest"></i>
+                <span>실험 측정 결과 데이터 기록표</span>
+              </h4>
+              <button onclick="clearDataRecords()" class="text-xs text-rose-500 hover:underline">
+                초기화
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs text-center border-collapse">
+                <thead>
+                  <tr class="bg-organic-cream text-organic-forest font-bold border-b border-organic-sand">
+                    <th class="p-2 rounded-l-xl">실험 회차</th>
+                    <th class="p-2">조작 변인 조건</th>
+                    <th class="p-2">모두 떠오르는 데 걸린 시간(s)</th>
+                    <th class="p-2 rounded-r-xl">비고</th>
+                  </tr>
+                </thead>
+                <tbody id="records-table-body" class="divide-y divide-gray-100 text-gray-700">
+                  <tr>
+                    <td colspan="4" class="p-4 text-gray-400">아직 기록된 데이터가 없습니다. 시뮬레이션을 완료한 후 데이터를 기록하세요.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Locked Placeholder Message -->
+      <div id="sim-locked-msg" class="bg-organic-sage/30 p-8 rounded-3xl border-2 border-dashed border-organic-mint text-center space-y-2">
+        <div class="w-12 h-12 bg-organic-sage text-organic-forest rounded-2xl flex items-center justify-center mx-auto text-xl">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h4 class="font-bold text-organic-forest text-base">실험 조작 패널 잠김</h4>
+        <p class="text-xs text-gray-600">위의 <strong>[변인 구분하기]</strong> 미션에서 조작 변인과 통제 변인을 알맞게 지정한 후 <strong>[변인 설정 확인]</strong> 버튼을 누르면 실험 조작 패널과 시뮬레이션이 나타납니다.</p>
+      </div>
+
+      <div class="flex justify-between pt-4">
+        <button onclick="switchTab('step2')" class="px-5 py-2.5 rounded-2xl bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 transition">
+          이전 단계
+        </button>
+        <button onclick="switchTab('step4')" class="px-6 py-3 rounded-2xl bg-organic-forest text-white font-bold hover:bg-organic-moss transition flex items-center gap-2 shadow-md">
+          <span>실험 결과 해석으로 이동</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- STEP 4: 실험 결과 해석 -->
+    <section id="panel-step4" class="hidden space-y-6 animate-fadeIn">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 organic-border organic-shadow space-y-6">
+        <div class="flex items-center justify-between border-b border-organic-sand pb-4">
+          <div class="flex items-center gap-3">
+            <span class="px-3 py-1 bg-organic-sage text-organic-forest text-xs font-bold rounded-full">STEP 4</span>
+            <h2 class="text-xl sm:text-2xl font-bold text-organic-forest">실험 결과 해석 (그래프 분석)</h2>
+          </div>
+          <span class="text-xs font-bold text-organic-moss bg-organic-sage px-3 py-1 rounded-full">
+            Y축 최대값: 80초 고정
+          </span>
+        </div>
+
+        <p class="text-xs sm:text-sm text-gray-600">
+          기록된 데이터를 통해 환경 요인의 변화에 따른 광합성 소요 시간의 관계를 그래프로 확인합니다.
+          (걸린 시간이 <strong>짧을수록</strong> 광합성량이 <strong>많음</strong>을 의미합니다.)
+        </p>
+
+        <!-- Graph Canvas Area -->
+        <div class="bg-organic-cream rounded-3xl p-4 border border-organic-sand h-[320px] relative">
+          <canvas id="graphCanvas" class="w-full h-full block"></canvas>
+        </div>
+
+        <!-- Data Trend Analysis Helper -->
+        <div class="p-4 rounded-2xl bg-organic-sage/30 border border-organic-mint text-xs sm:text-sm text-gray-700 space-y-2">
+          <h4 class="font-bold text-organic-forest flex items-center gap-1.5">
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
+            <span>결과 해석 관점 가이드</span>
+          </h4>
+          <ul class="list-disc pl-5 space-y-1 text-gray-600">
+            <li><strong>빛의 세기 / CO₂ 농도:</strong> 일정 수준까지 세거나 진해질수록 떠오르는 시간이 줄어들지만, 일정 한계 이상에서는 시간이 더 이상 줄어들지 않고 일정해집니다.</li>
+            <li><strong>수용액 온도:</strong> 약 30℃ 부근에서 걸린 시간이 가장 짧으며(최적 온도), 50℃ 이상의 고온에서는 효소 변성으로 광합성 속도가 크게 떨어져 시간이 매우 길어집니다.</li>
+          </ul>
+        </div>
+
+        <div class="flex justify-between pt-4">
+          <button onclick="switchTab('step3')" class="px-5 py-2.5 rounded-2xl bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 transition">
+            이전 단계
+          </button>
+          <button onclick="switchTab('step5')" class="px-6 py-3 rounded-2xl bg-organic-forest text-white font-bold hover:bg-organic-moss transition flex items-center gap-2 shadow-md">
+            <span>결론 도출 및 보고서 작성</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- STEP 5: 결론 및 보고서 -->
+    <section id="panel-step5" class="hidden space-y-6 animate-fadeIn">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 organic-border organic-shadow space-y-6 print-area">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-organic-forest pb-4 gap-3">
+          <div>
+            <span class="px-3 py-1 bg-organic-sage text-organic-forest text-xs font-bold rounded-full no-print">STEP 5</span>
+            <h2 class="text-2xl font-black text-organic-forest mt-1">광합성 탐구 실험 보고서</h2>
+          </div>
+          <button onclick="window.print()" class="no-print px-4 py-2 bg-organic-forest text-white font-bold text-xs rounded-2xl hover:bg-organic-moss transition flex items-center gap-2 shadow-sm self-start sm:self-auto">
+            <i class="fa-solid fa-print"></i>
+            <span>보고서 인쇄 / PDF 저장</span>
+          </button>
+        </div>
+
+        <!-- Student Meta Information Inputs -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-organic-cream border border-organic-sand text-xs">
+          <div>
+            <label class="font-bold text-gray-700 block mb-1">학년/반/번호:</label>
+            <input type="text" id="report-class" placeholder="예: 2학년 3반 15번" class="w-full p-2 rounded-xl border border-gray-300 focus:outline-none">
+          </div>
+          <div>
+            <label class="font-bold text-gray-700 block mb-1">이름:</label>
+            <input type="text" id="report-name" placeholder="홍길동" class="w-full p-2 rounded-xl border border-gray-300 focus:outline-none">
+          </div>
+          <div>
+            <label class="font-bold text-gray-700 block mb-1">실험 일자:</label>
+            <input type="date" id="report-date" class="w-full p-2 rounded-xl border border-gray-300 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Summary of Steps 1-2 -->
+        <div class="space-y-4 text-xs sm:text-sm">
+          <div class="p-4 rounded-2xl border border-gray-200 space-y-1">
+            <h4 class="font-bold text-organic-forest">1. 탐구 주제 및 요인</h4>
+            <p id="report-summary-factor" class="text-gray-700 font-semibold">선택된 요인: 빛의 세기</p>
+          </div>
+
+          <div class="p-4 rounded-2xl border border-gray-200 space-y-1">
+            <h4 class="font-bold text-organic-forest">2. 세운 가설</h4>
+            <p id="report-summary-hypothesis" class="text-gray-700 italic font-medium">가설이 입력되지 않았습니다.</p>
+          </div>
+        </div>
+
+        <div class="space-y-6 pt-2 border-t border-organic-sand">
+          <h3 class="font-bold text-base text-gray-800 border-l-4 border-organic-forest pl-3">
+            결론 도출 및 과학적 고찰
+          </h3>
+
+          <!-- Question 1: Hypothesis Match Radio -->
+          <div class="space-y-2">
+            <label class="block font-bold text-sm text-gray-800">
+              1) 처음 세운 가설과 실험 결과가 일치하였나요?
+            </label>
+            <div class="flex gap-6 text-sm font-semibold">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="q-match" value="yes" checked class="accent-organic-forest w-4 h-4">
+                <span>일치한다</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="q-match" value="no" class="accent-organic-forest w-4 h-4">
+                <span>일치하지 않는다</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Question 2: Judgment based on data -->
+          <div class="space-y-2">
+            <label for="report-q2" class="block font-bold text-sm text-gray-800">
+              2) 자료를 근거로 가설에 대한 판단을 내려보자.
+            </label>
+            <textarea id="report-q2" rows="2" 
+                      placeholder="예: 실험 결과 빛의 세기가 1단에서 4단으로 세어질수록 잎 원반이 떠오르는 데 걸린 시간이 55초에서 14초로 단축되었으므로 세운 가설은 타당하다."
+                      class="w-full p-3 rounded-2xl border border-gray-300 focus:border-organic-forest focus:outline-none text-xs sm:text-sm"></textarea>
+          </div>
+
+          <!-- Question 3: Final Conclusion Statement -->
+          <div class="space-y-2">
+            <label for="report-q3" class="block font-bold text-sm text-gray-800">
+              3) 탐구 주제에 대한 결론을 내려보자. (예: '~가 증가하면 광합성량은 ~한다.')
+            </label>
+            <textarea id="report-q3" rows="3" 
+                      placeholder="예: 빛의 세기가 세어질수록 광합성량이 증가하여 산소 기포 발생 속도가 빠르며, 일정 세기 이상에서는 광합성량이 더 이상 증가하지 않고 일정하게 유지된다."
+                      class="w-full p-3 rounded-2xl border border-gray-300 focus:border-organic-forest focus:outline-none text-xs sm:text-sm"></textarea>
+          </div>
+
+        </div>
+
+        <div class="flex justify-between pt-6 no-print border-t border-organic-sand">
+          <button onclick="switchTab('step4')" class="px-5 py-2.5 rounded-2xl bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 transition">
+            이전 단계
+          </button>
+          <button onclick="showToast('보고서가 완료되었습니다! 상단의 인쇄 버튼으로 제출하세요.', 'success')" class="px-6 py-3 rounded-2xl bg-organic-forest text-white font-bold hover:bg-organic-moss transition flex items-center gap-2 shadow-md">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>보고서 작성 완료</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Help Modal -->
+  <div id="helpModal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 organic-border organic-shadow space-y-4">
+      <div class="flex items-center justify-between border-b border-organic-sand pb-3">
+        <h3 class="font-bold text-organic-forest text-lg flex items-center gap-2">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>실험 가이드</span>
+        </h3>
+        <button onclick="closeHelpModal()" class="text-gray-400 hover:text-gray-600 p-1">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <div class="text-xs text-gray-600 space-y-2 leading-relaxed">
+        <p>1. <strong>시금치 잎 원반이 떠오르는 이유:</strong> 광합성이 진행되면서 O₂ 산소 기포가 생성되어 잎 내부 조직에 차올라 부력이 생기기 때문입니다.</p>
+        <p>2. <strong>변인 통제:</strong> 조작 변인 1가지를 제외한 나머지 2가지 환경 조건은 일정하게 고정되어야 정확한 비교가 가능합니다.</p>
+        <p>3. <strong>걸린 시간과 광합성량:</strong> 떠오르는 소요 시간이 짧을수록 광합성 속도가 빠른 것입니다.</p>
+      </div>
+      <button onclick="closeHelpModal()" class="w-full py-2.5 rounded-2xl bg-organic-forest text-white font-bold text-xs hover:bg-organic-moss transition">
+        확인
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       STATE MANAGEMENT & GLOBAL VARIABLES
+       ========================================================================== */
+    const state = {
+      currentStep: 'step1',
+      selectedFactor: 'light', // 'light', 'co2', 'temp'
+      hypothesis: '',
+      
+      // Variable classification mission choices
+      varRoles: {
+        light: null, // 'manipulated' or 'controlled'
+        co2: null,
+        temp: null
+      },
+      varUnlocked: false,
+
+      // Control values
+      sliderValue: 3,
+
+      // Simulation engine state
+      simRunning: false,
+      simFinished: false,
+      elapsedSimTime: 0,
+      targetTime: 24.0,
+      leaves: [],
+      bubbles: [],
+
+      // Data records table
+      dataRecords: []
+    };
+
+    let simCanvas, simCtx;
+    let graphCanvas, graphCtx;
+    let lastTimestamp = 0;
+    let animFrameId = null;
+
+    // Custom Background Image Setup
+    const expBgImage = new Image();
+    let bgImageLoaded = false;
+    expBgImage.crossOrigin = "anonymous";
+    expBgImage.src = 'https://lh3.googleusercontent.com/d/1x3y5mk0r_9-DznUv832V3WfvEwQipOnC';
+    expBgImage.onload = function() {
+      bgImageLoaded = true;
+      if (state.currentStep === 'step3') drawSimulation();
+    };
+
+    /* ==========================================================================
+       SOUND SYNTHESIZER (Web Audio API)
+       ========================================================================== */
+    function playSound(type) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, ctx.currentTime);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.05);
+        } else if (type === 'success') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+          osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+        } else if (type === 'warning') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.15);
+        }
+      } catch(e) {
+        // Audio playback error fallback
+      }
+    }
+
+    /* ==========================================================================
+       NAVIGATION & TAB SWITCHING
+       ========================================================================== */
+    function switchTab(stepId) {
+      playSound('click');
+      state.currentStep = stepId;
+
+      // Toggle Panels
+      ['step1', 'step2', 'step3', 'step4', 'step5'].forEach(step => {
+        const panel = document.getElementById(`panel-${step}`);
+        const nav = document.getElementById(`nav-${step}`);
+        if (step === stepId) {
+          panel.classList.remove('hidden');
+          nav.className = 'px-3 py-2 rounded-2xl flex items-center gap-1.5 transition bg-organic-forest text-white shadow-sm whitespace-nowrap';
+        } else {
+          panel.classList.add('hidden');
+          nav.className = 'px-3 py-2 rounded-2xl flex items-center gap-1.5 transition text-organic-muted hover:text-organic-forest hover:bg-organic-sage/50 whitespace-nowrap';
+        }
+      });
+
+      // Step-specific initializations
+      if (stepId === 'step2') {
+        const factorTitles = { light: '빛의 세기', co2: '이산화 탄소 농도', temp: '수용액 온도' };
+        document.getElementById('selected-factor-title').textContent = factorTitles[state.selectedFactor];
+        document.getElementById('report-summary-factor').textContent = `선택된 요인: ${factorTitles[state.selectedFactor]}`;
+      } else if (stepId === 'step3') {
+        requestAnimationFrame(() => {
+          resizeCanvases();
+          resetSimulation();
+        });
+      } else if (stepId === 'step4') {
+        requestAnimationFrame(() => {
+          resizeCanvases();
+          drawGraph();
+        });
+      } else if (stepId === 'step5') {
+        document.getElementById('report-summary-hypothesis').textContent = state.hypothesis || '작성된 가설이 없습니다.';
+      }
+    }
+
+    function nextStep(stepId) {
+      switchTab(stepId);
+    }
+
+    /* ==========================================================================
+       STEP 1 & STEP 2 LOGIC
+       ========================================================================== */
+    function selectFactor(factor) {
+      playSound('click');
+      state.selectedFactor = factor;
+      
+      // Reset roles
+      state.varRoles = { light: null, co2: null, temp: null };
+      state.varUnlocked = false;
+      document.getElementById('sim-workbench').classList.add('hidden');
+      document.getElementById('sim-locked-msg').classList.remove('hidden');
+
+      const badge = document.getElementById('var-status-badge');
+      badge.className = 'text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-200';
+      badge.textContent = '변인 설정 미완료';
+
+      updateStep1UI();
+      updateVariableUI();
+      updateSliderAndControlUI();
+    }
+
+    function updateStep1UI() {
+      const factors = ['light', 'co2', 'temp'];
+      factors.forEach(f => {
+        const card = document.getElementById(`card-factor-${f}`);
+        const badge = document.getElementById(`badge-factor-${f}`);
+        if (f === state.selectedFactor) {
+          card.className = 'cursor-pointer group relative p-6 rounded-3xl border-2 transition-all duration-300 bg-white border-organic-forest shadow-md flex flex-col justify-between space-y-4';
+          badge.classList.remove('hidden');
+        } else {
+          card.className = 'cursor-pointer group relative p-6 rounded-3xl border-2 transition-all duration-300 bg-white border-organic-sand hover:border-organic-forest hover:shadow-lg flex flex-col justify-between space-y-4';
+          badge.classList.add('hidden');
+        }
+      });
+    }
+
+    function saveHypothesisAndNext() {
+      const input = document.getElementById('hypothesis-input').value.trim();
+      if (!input) {
+        showToast('가설을 입력해 주세요!', 'warning');
+        return;
+      }
+      state.hypothesis = input;
+      playSound('success');
+      switchTab('step3');
+    }
+
+    /* ==========================================================================
+       STEP 3: VARIABLE CLASSIFICATION MISSION
+       ========================================================================== */
+    function setVariableRole(factor, role) {
+      playSound('click');
+      state.varRoles[factor] = role;
+      updateVariableUI();
+    }
+
+    function updateVariableUI() {
+      ['light', 'co2', 'temp'].forEach(f => {
+        const btnM = document.getElementById(`btn-var-${f}-m`);
+        const btnC = document.getElementById(`btn-var-${f}-c`);
+        const currentRole = state.varRoles[f];
+
+        if (currentRole === 'manipulated') {
+          btnM.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl bg-organic-forest text-white transition shadow-sm';
+          btnC.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition text-gray-600';
+        } else if (currentRole === 'controlled') {
+          btnM.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition text-gray-600';
+          btnC.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl bg-organic-moss text-white transition shadow-sm';
+        } else {
+          btnM.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition text-gray-600';
+          btnC.className = 'flex-1 py-1.5 text-xs font-bold rounded-xl border border-gray-300 bg-white hover:bg-organic-sage transition text-gray-600';
+        }
+      });
+    }
+
+    function checkVariableSetup() {
+      playSound('click');
+      const targetM = state.selectedFactor;
+      const roles = state.varRoles;
+
+      if (!roles.light || !roles.co2 || !roles.temp) {
+        showToast('세 가지 변인의 역할을 모두 지정해 주세요.', 'warning');
+        return;
+      }
+
+      if (roles[targetM] === 'manipulated' && 
+          Object.keys(roles).filter(k => k !== targetM).every(k => roles[k] === 'controlled')) {
+        
+        state.varUnlocked = true;
+        const badge = document.getElementById('var-status-badge');
+        badge.className = 'text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300';
+        badge.textContent = '✓ 변인 통제 통과';
+
+        document.getElementById('sim-workbench').classList.remove('hidden');
+        document.getElementById('sim-locked-msg').classList.add('hidden');
+
+        requestAnimationFrame(() => {
+          resizeCanvases();
+          resetSimulation();
+        });
+
+        playSound('success');
+        showToast('올바른 변인 설정입니다! 탐구 실험 패널이 열렸습니다.', 'success');
+      } else {
+        state.varUnlocked = false;
+        showToast('선택한 탐구 요인이 [조작 변인]이어야 하며, 나머지 요인들은 [통제 변인]이어야 합니다.', 'warning');
+      }
+    }
+
+    /* ==========================================================================
+       SIMULATION ENGINE & CONTROLS
+       ========================================================================== */
+    function updateSliderAndControlUI() {
+      const slider = document.getElementById('sim-slider');
+      const label = document.getElementById('slider-label');
+      const valDisplay = document.getElementById('slider-value-display');
+      const ticks = document.getElementById('slider-ticks');
+      const ctrlVarsContainer = document.getElementById('ctrl-vars-container');
+
+      if (state.selectedFactor === 'light') {
+        label.textContent = '조작 변인: 빛의 세기 (발광 다이오드 밝기)';
+        slider.min = 1; slider.max = 5; slider.step = 1;
+        if (state.sliderValue < 1 || state.sliderValue > 5) state.sliderValue = 3;
+        slider.value = state.sliderValue;
+        valDisplay.textContent = `${state.sliderValue}단`;
+        ticks.innerHTML = '<span>1단</span><span>2단</span><span>3단</span><span>4단</span><span>5단</span>';
+        ctrlVarsContainer.innerHTML = '<div>• 이산화 탄소 농도: <strong>3% 일정</strong></div><div>• 수용액 온도: <strong>25℃ 일정</strong></div>';
+      } else if (state.selectedFactor === 'co2') {
+        label.textContent = '조작 변인: 이산화 탄소 농도 (탄산수소 나트륨)';
+        slider.min = 1; slider.max = 5; slider.step = 1;
+        if (state.sliderValue < 1 || state.sliderValue > 5) state.sliderValue = 3;
+        slider.value = state.sliderValue;
+        valDisplay.textContent = `${state.sliderValue}%`;
+        ticks.innerHTML = '<span>1%</span><span>2%</span><span>3%</span><span>4%</span><span>5%</span>';
+        ctrlVarsContainer.innerHTML = '<div>• 빛의 세기: <strong>3단 일정</strong></div><div>• 수용액 온도: <strong>25℃ 일정</strong></div>';
+      } else if (state.selectedFactor === 'temp') {
+        label.textContent = '조작 변인: 수용액 온도 (℃)';
+        slider.min = 10; slider.max = 50; slider.step = 10;
+        if (state.sliderValue < 10 || state.sliderValue > 50) state.sliderValue = 30;
+        slider.value = state.sliderValue;
+        valDisplay.textContent = `${state.sliderValue}℃`;
+        ticks.innerHTML = '<span>10℃</span><span>20℃</span><span>30℃</span><span>40℃</span><span>50℃</span>';
+        ctrlVarsContainer.innerHTML = '<div>• 빛의 세기: <strong>3단 일정</strong></div><div>• 이산화 탄소 농도: <strong>3% 일정</strong></div>';
+      }
+    }
+
+    function onSliderChange(val) {
+      state.sliderValue = parseInt(val, 10);
+      updateSliderAndControlUI();
+      resetSimulation();
+    }
+
+    // Floating Target Time Calculation Formula
+    function calculateTargetFloatingTime() {
+      const v = state.sliderValue;
+      if (state.selectedFactor === 'light') {
+        // Light: 1(55s), 2(38s), 3(24s), 4(14s), 5(14s)
+        const times = { 1: 55.0, 2: 38.0, 3: 24.0, 4: 14.0, 5: 14.0 };
+        return times[v] || 24.0;
+      } else if (state.selectedFactor === 'co2') {
+        // CO2: 1%(58s), 2%(40s), 3%(25s), 4%(15s), 5%(15s)
+        const times = { 1: 58.0, 2: 40.0, 3: 25.0, 4: 15.0, 5: 15.0 };
+        return times[v] || 25.0;
+      } else if (state.selectedFactor === 'temp') {
+        // Temp: 10℃(65s), 20℃(42s), 30℃(15s), 40℃(22s), 50℃(75s)
+        const times = { 10: 65.0, 20: 42.0, 30: 15.0, 40: 22.0, 50: 75.0 };
+        return times[v] || 15.0;
+      }
+      return 24.0;
+    }
+
+    function resetSimulation() {
+      state.simRunning = false;
+      state.simFinished = false;
+      state.elapsedSimTime = 0;
+      state.targetTime = calculateTargetFloatingTime();
+
+      document.getElementById('timer-display').textContent = '00.0s';
+      document.getElementById('leaf-count-display').textContent = '0 / 6';
+      document.getElementById('sim-play-icon').className = 'fa-solid fa-play';
+      document.getElementById('sim-btn-text').textContent = '실험 시작';
+      document.getElementById('btn-record-data').disabled = true;
+      document.getElementById('sim-complete-banner').classList.add('hidden');
+
+      // Create 6 spinach leaf discs positioned centered in beaker with exact synchronized timing
+      state.leaves = [];
+      const floatDuration = Math.min(2.5, state.targetTime * 0.18); // Animation duration per leaf in sim seconds
+      const startWindowMin = state.targetTime * 0.12;
+      const startWindowMax = Math.max(startWindowMin + 0.1, state.targetTime - floatDuration);
+
+      for (let i = 0; i < 6; i++) {
+        // Linearly distribute leaf trigger times so the last leaf (i=5) reaches 100% float exactly at state.targetTime
+        const triggerTime = startWindowMin + (i * (startWindowMax - startWindowMin) / 5);
+        state.leaves.push({
+          id: i,
+          xRatio: 0.491 + (i % 3) * 0.042, // Fixed rightmost position at 0.575 with 0.042 X-spacing
+          yRatio: 0.82 + (Math.floor(i / 3) * 0.022) + (Math.random() * 0.004 - 0.002), // Shifted lower towards beaker bottom
+          targetYRatio: 0.62 + ((i % 3) * 0.01) + (Math.floor(i / 3) * 0.008), // Floats smoothly to solution surface
+          triggerTime: triggerTime,
+          floatDuration: floatDuration,
+          isFloating: false,
+          floated: false,
+          floatProgress: 0,
+          radius: 8
+        });
+      }
+      state.bubbles = [];
+      drawSimulation();
+    }
+
+    function toggleSimulation() {
+      if (state.simFinished) {
+        resetSimulation();
+      }
+
+      state.simRunning = !state.simRunning;
+      playSound('click');
+
+      const btnIcon = document.getElementById('sim-play-icon');
+      const btnText = document.getElementById('sim-btn-text');
+
+      if (state.simRunning) {
+        btnIcon.className = 'fa-solid fa-pause';
+        btnText.textContent = '일시 정지';
+        lastTimestamp = performance.now();
+        animFrameId = requestAnimationFrame(runSimulationStep);
+      } else {
+        btnIcon.className = 'fa-solid fa-play';
+        btnText.textContent = '실험 재개';
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+      }
+    }
+
+    function runSimulationStep(timestamp) {
+      if (!state.simRunning) return;
+
+      const delta = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+
+      // Accelerated display time
+      state.elapsedSimTime += delta * 2.2;
+
+      if (state.elapsedSimTime >= state.targetTime) {
+        state.elapsedSimTime = state.targetTime;
+        state.simRunning = false;
+        state.simFinished = true;
+
+        document.getElementById('sim-play-icon').className = 'fa-solid fa-rotate-left';
+        document.getElementById('sim-btn-text').textContent = '다시 실험하기';
+        document.getElementById('btn-record-data').disabled = false;
+        document.getElementById('banner-final-time').textContent = `${state.targetTime.toFixed(1)}s`;
+        document.getElementById('sim-complete-banner').classList.remove('hidden');
+
+        playSound('success');
+      }
+
+      // Update leaves floating status directly bound to elapsedSimTime for exact synchronization
+      let floatedCount = 0;
+      state.leaves.forEach(leaf => {
+        if (state.elapsedSimTime >= leaf.triggerTime) {
+          leaf.isFloating = true;
+          leaf.floatProgress = Math.min(1.0, (state.elapsedSimTime - leaf.triggerTime) / leaf.floatDuration);
+          if (leaf.floatProgress >= 1.0) {
+            leaf.floated = true;
+          }
+        } else {
+          leaf.floatProgress = 0;
+          leaf.isFloating = false;
+          leaf.floated = false;
+        }
+
+        if (leaf.floatProgress >= 0.95) {
+          floatedCount++;
+        }
+      });
+
+      // Spawn oxygen bubbles inside beaker solution range
+      if (Math.random() < 0.35) {
+        state.bubbles.push({
+          xRatio: 0.51 + Math.random() * 0.07,
+          yRatio: 0.80,
+          radius: 1.5 + Math.random() * 2.5,
+          speed: 0.15 + Math.random() * 0.2
+        });
+      }
+
+      // Update oxygen bubbles
+      for (let i = state.bubbles.length - 1; i >= 0; i--) {
+        const b = state.bubbles[i];
+        b.yRatio -= b.speed * delta;
+        if (b.yRatio < 0.60) state.bubbles.splice(i, 1);
+      }
+
+      // Update UI displays
+      document.getElementById('timer-display').textContent = `${state.elapsedSimTime.toFixed(1)}s`;
+      document.getElementById('leaf-count-display').textContent = `${floatedCount} / 6`;
+
+      drawSimulation();
+
+      if (state.simRunning) {
+        animFrameId = requestAnimationFrame(runSimulationStep);
+      }
+    }
+
+    function drawSimulation() {
+      if (!simCtx || !simCanvas) return;
+      
+      const ctx = simCtx;
+      const w = simCanvas.width;
+      const h = simCanvas.height;
+      if (w === 0 || h === 0) return;
+
+      ctx.clearRect(0, 0, w, h);
+
+      let renderW = w;
+      let renderH = h;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      // Draw background image preserving original aspect ratio
+      if (bgImageLoaded && expBgImage.naturalWidth > 0) {
+        const imgAspect = expBgImage.naturalWidth / expBgImage.naturalHeight;
+        const canvasAspect = w / h;
+
+        if (canvasAspect > imgAspect) {
+          renderH = h;
+          renderW = h * imgAspect;
+          offsetX = (w - renderW) / 2;
+          offsetY = 0;
+        } else {
+          renderW = w;
+          renderH = w / imgAspect;
+          offsetX = 0;
+          offsetY = (h - renderH) / 2;
+        }
+
+        ctx.drawImage(expBgImage, offsetX, offsetY, renderW, renderH);
+      } else {
+        // Fallback smooth background
+        ctx.fillStyle = '#FAF7F2';
+        ctx.fillRect(0, 0, w, h);
+
+        // Fallback Beaker Line
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(w * 0.32, h * 0.35, w * 0.32, h * 0.48);
+        
+        ctx.fillStyle = 'rgba(216, 236, 224, 0.4)';
+        ctx.fillRect(w * 0.32, h * 0.38, w * 0.32, h * 0.45);
+      }
+
+      // Helper function to map normalized image coordinates (0~1) to canvas coordinates
+      const toCanvasX = (rx) => offsetX + rx * renderW;
+      const toCanvasY = (ry) => offsetY + ry * renderH;
+
+      // Draw Yellow LED Light Rays Beam
+      const intensity = state.selectedFactor === 'light' ? state.sliderValue : 3;
+      const opacity = 0.08 + (intensity * 0.05);
+      
+      ctx.save();
+      const lightGradient = ctx.createLinearGradient(
+        toCanvasX(0.15), toCanvasY(0.35),
+        toCanvasX(0.60), toCanvasY(0.65)
+      );
+      lightGradient.addColorStop(0, `rgba(250, 204, 21, ${opacity * 1.5})`);
+      lightGradient.addColorStop(1, `rgba(250, 204, 21, 0)`);
+      
+      ctx.fillStyle = lightGradient;
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(0.10), toCanvasY(0.38));
+      ctx.lineTo(toCanvasX(0.65), toCanvasY(0.32));
+      ctx.lineTo(toCanvasX(0.65), toCanvasY(0.85));
+      ctx.lineTo(toCanvasX(0.10), toCanvasY(0.58));
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Draw Oxygen Bubbles
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 1;
+      state.bubbles.forEach(b => {
+        ctx.beginPath();
+        ctx.arc(toCanvasX(b.xRatio), toCanvasY(b.yRatio), b.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      // Draw 6 Spinach Leaf Discs
+      state.leaves.forEach(leaf => {
+        const currentYRatio = leaf.yRatio - (leaf.yRatio - leaf.targetYRatio) * leaf.floatProgress;
+        const lx = toCanvasX(leaf.xRatio);
+        const ly = toCanvasY(currentYRatio);
+
+        ctx.save();
+        ctx.translate(lx, ly);
+
+        // Leaf Body
+        ctx.fillStyle = '#2d5a27';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, leaf.radius + 2, leaf.radius - 2, Math.PI / 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Leaf Border
+        ctx.strokeStyle = '#4a7c59';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Leaf Central Vein
+        ctx.strokeStyle = '#87a96b';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-leaf.radius, 0);
+        ctx.lineTo(leaf.radius, 0);
+        ctx.stroke();
+
+        ctx.restore();
+      });
+    }
+
+    /* ==========================================================================
+       DATA TABLE RECORDS MANAGEMENT
+       ========================================================================== */
+    function recordDataPoint() {
+      if (!state.simFinished) return;
+
+      const factorNames = { light: '빛의 세기', co2: 'CO₂ 농도', temp: '온도' };
+      const unitMap = { light: '단', co2: '%', temp: '℃' };
+      const conditionStr = `${factorNames[state.selectedFactor]} ${state.sliderValue}${unitMap[state.selectedFactor]}`;
+
+      // Check duplicate
+      const duplicate = state.dataRecords.find(r => r.factor === state.selectedFactor && r.value === state.sliderValue);
+      if (duplicate) {
+        duplicate.time = state.targetTime;
+      } else {
+        state.dataRecords.push({
+          id: state.dataRecords.length + 1,
+          factor: state.selectedFactor,
+          value: state.sliderValue,
+          condition: conditionStr,
+          time: state.targetTime
+        });
+      }
+
+      playSound('success');
+      showToast('측정 데이터가 표에 기록되었습니다.', 'success');
+      renderRecordsTable();
+      drawGraph();
+    }
+
+    function clearDataRecords() {
+      playSound('click');
+      state.dataRecords = [];
+      renderRecordsTable();
+      drawGraph();
+      showToast('측정 기록표가 초기화되었습니다.', 'warning');
+    }
+
+    function renderRecordsTable() {
+      const tbody = document.getElementById('records-table-body');
+      if (state.dataRecords.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-gray-400">아직 기록된 데이터가 없습니다. 시뮬레이션을 완료한 후 데이터를 기록하세요.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = state.dataRecords.map((r, index) => `
+        <tr class="hover:bg-organic-sage/30 transition">
+          <td class="p-2.5 font-bold">${index + 1}회차</td>
+          <td class="p-2.5 font-semibold text-organic-forest">${r.condition}</td>
+          <td class="p-2.5 font-mono font-bold text-amber-900">${r.time.toFixed(1)}s</td>
+          <td class="p-2.5 text-gray-500">정상 측정</td>
+        </tr>
+      `).join('');
+    }
+
+    /* ==========================================================================
+       STEP 4: GRAPH CANVAS RENDERER (Y-axis Max 80s Fixed)
+       ========================================================================== */
+    function drawGraph() {
+      if (!graphCtx || !graphCanvas) return;
+
+      const ctx = graphCtx;
+      const w = graphCanvas.width;
+      const h = graphCanvas.height;
+      if (w === 0 || h === 0) return;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const padding = { top: 35, right: 35, bottom: 45, left: 55 };
+      const graphW = w - padding.left - padding.right;
+      const graphH = h - padding.top - padding.bottom;
+
+      // Draw Gridlines & Y-Axis (Fixed 80s Max)
+      const maxY = 80;
+      const yTicks = [0, 20, 40, 60, 80];
+
+      ctx.strokeStyle = '#e2eadf';
+      ctx.lineWidth = 1;
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'right';
+
+      yTicks.forEach(tick => {
+        const y = padding.top + graphH - (tick / maxY) * graphH;
+        
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(padding.left + graphW, y);
+        ctx.stroke();
+
+        ctx.fillText(`${tick}s`, padding.left - 8, y + 4);
+      });
+
+      // X-Axis Scale Labels based on selected factor
+      let xLabels = [];
+      if (state.selectedFactor === 'temp') {
+        xLabels = ['10℃', '20℃', '30℃', '40℃', '50℃'];
+      } else if (state.selectedFactor === 'co2') {
+        xLabels = ['1%', '2%', '3%', '4%', '5%'];
+      } else {
+        xLabels = ['1단', '2단', '3단', '4단', '5단'];
+      }
+
+      ctx.textAlign = 'center';
+      const xPositions = [];
+      xLabels.forEach((label, i) => {
+        const x = padding.left + (i / (xLabels.length - 1)) * graphW;
+        xPositions.push(x);
+
+        ctx.beginPath();
+        ctx.moveTo(x, padding.top);
+        ctx.lineTo(x, padding.top + graphH);
+        ctx.stroke();
+
+        ctx.fillText(label, x, padding.top + graphH + 20);
+      });
+
+      // Axis Labels
+      ctx.fillStyle = '#2d5a27';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('소요 시간 (초)', padding.left - 15, padding.top - 15);
+      
+      const factorTitles = { light: '빛의 세기', co2: '이산화 탄소 농도', temp: '수용액 온도' };
+      ctx.fillText(factorTitles[state.selectedFactor], padding.left + graphW / 2, padding.top + graphH + 38);
+
+      // Filter and Plot Recorded Points for the current factor
+      const filteredRecords = state.dataRecords
+        .filter(r => r.factor === state.selectedFactor)
+        .sort((a, b) => a.value - b.value);
+
+      if (filteredRecords.length > 0) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#2d5a27';
+        ctx.lineWidth = 3;
+
+        filteredRecords.forEach((r, idx) => {
+          let xIdx = 0;
+          if (state.selectedFactor === 'temp') xIdx = (r.value / 10) - 1;
+          else xIdx = r.value - 1;
+
+          const px = xPositions[xIdx];
+          const py = padding.top + graphH - (r.time / maxY) * graphH;
+
+          if (idx === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+
+        // Draw Data Point Nodes
+        filteredRecords.forEach(r => {
+          let xIdx = 0;
+          if (state.selectedFactor === 'temp') xIdx = (r.value / 10) - 1;
+          else xIdx = r.value - 1;
+
+          const px = xPositions[xIdx];
+          const py = padding.top + graphH - (r.time / maxY) * graphH;
+
+          ctx.fillStyle = '#f4a261';
+          ctx.beginPath();
+          ctx.arc(px, py, 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Value tag
+          ctx.fillStyle = '#1f2937';
+          ctx.font = 'bold 10px font-mono';
+          ctx.fillText(`${r.time.toFixed(1)}s`, px, py - 10);
+        });
+      }
+    }
+
+    /* ==========================================================================
+       UTILITIES & UI HELPERS
+       ========================================================================== */
+    function resizeCanvases() {
+      if (simCanvas && simCanvas.parentElement) {
+        simCanvas.width = simCanvas.parentElement.clientWidth;
+        simCanvas.height = simCanvas.parentElement.clientHeight;
+        drawSimulation();
+      }
+      if (graphCanvas && graphCanvas.parentElement) {
+        graphCanvas.width = graphCanvas.parentElement.clientWidth;
+        graphCanvas.height = graphCanvas.parentElement.clientHeight;
+        drawGraph();
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const bgClass = type === 'success' ? 'bg-emerald-600 text-white' : type === 'warning' ? 'bg-amber-600 text-white' : 'bg-gray-800 text-white';
+      
+      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl shadow-xl font-bold text-xs flex items-center gap-2 animate-fadeIn ${bgClass}`;
+      toast.innerHTML = `<i class="fa-solid fa-circle-info"></i><span>${message}</span>`;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function showHelpModal() {
+      playSound('click');
+      document.getElementById('helpModal').classList.remove('hidden');
+    }
+
+    function closeHelpModal() {
+      playSound('click');
+      document.getElementById('helpModal').classList.add('hidden');
+    }
+
+    /* ==========================================================================
+       INITIALIZATION ON LOAD
+       ========================================================================== */
+    window.onload = function() {
+      simCanvas = document.getElementById('simCanvas');
+      simCtx = simCanvas ? simCanvas.getContext('2d') : null;
+
+      graphCanvas = document.getElementById('graphCanvas');
+      graphCtx = graphCanvas ? graphCanvas.getContext('2d') : null;
+
+      // Set initial report date to today
+      const dateInput = document.getElementById('report-date');
+      if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+      }
+
+      // Responsive Resize Listener
+      window.addEventListener('resize', resizeCanvases);
+
+      // ResizeObserver for hidden panel size fixes
+      if (window.ResizeObserver) {
+        const observer = new ResizeObserver(() => resizeCanvases());
+        const simParent = simCanvas ? simCanvas.parentElement : null;
+        if (simParent) observer.observe(simParent);
+      }
+
+      // Initialize UI
+      updateStep1UI();
+      updateVariableUI();
+      updateSliderAndControlUI();
+      
+      // Start in Step 1 view
+      switchTab('step1');
+    };
+  </script>
+</body>
+</html>
